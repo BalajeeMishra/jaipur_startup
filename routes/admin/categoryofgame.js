@@ -19,4 +19,31 @@ router.post("/add", async (req, res) => {
   return res.json({ message: "New Battle created successfully" });
 });
 
+router.get("/edit/:id", async (req, res) => {
+  const { id } = req.params;
+  const getBattleById = await Category.findById(id);
+  return res.status(200).json(getBattleById);
+});
+router.put("/edit/:id", async (req, res) => {
+  const { id } = req.params;
+  console.log(req.body);
+  try {
+    var updateBattle = await Category.findByIdAndUpdate(id, req.body, {
+      runValidators: true,
+      new: true,
+      context: "query",
+      useFindAndModify: false,
+    });
+  } catch (e) {
+    console.log(e);
+  }
+  console.log(updateBattle);
+  return res.status(200).json({ message: "Battle gets updated" });
+});
+router.get("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  const deleted = await Category.findByIdAndDelete(id);
+  console.log(deleted);
+  return res.status(200).json({ message: "Battle deleted " });
+});
 module.exports = router;

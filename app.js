@@ -14,6 +14,7 @@ const app = express();
 
 const UserRoute = require("./routes/user");
 const CategoryOfGame = require("./routes/admin/categoryofgame");
+const Cointouser = require("./routes/admin/givecointouser");
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -53,13 +54,13 @@ app.use(flash());
 
 app.use("/api/user", UserRoute);
 app.use("/api/categoryofgame", CategoryOfGame);
-
-app.use(async (req, res, next) => {
-  res.locals.currentUser = req.user;
-  res.locals.error = req.flash("error");
-  res.locals.success = req.flash("success");
-  next();
-});
+app.use("/api/cointouser", Cointouser),
+  app.use(async (req, res, next) => {
+    res.locals.currentUser = req.user;
+    res.locals.error = req.flash("error");
+    res.locals.success = req.flash("success");
+    next();
+  });
 // Routes...
 
 // Home route

@@ -11,6 +11,14 @@ const UserSchema = new mongoose.Schema(
     password: {
       type: String,
     },
+    purchaseofuser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Purchase",
+    },
+    // status of the player pending or compeleted means false or true.
+    statusofgame: {
+      type: Boolean,
+    },
   },
   { timestamps: true }
 );
