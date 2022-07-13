@@ -24,8 +24,17 @@ const CategorySchema = new mongoose.Schema(
     },
     // we have to show waiting status because we will say to user for waiting 45 sec
     // after that redirect to admin
+    // user who is waitingggg.
+    waitinguser: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     waitingPlayer: {
       type: Number,
+      default: 0,
     },
   },
   { timestamps: true }

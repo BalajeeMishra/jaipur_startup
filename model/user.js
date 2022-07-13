@@ -16,9 +16,6 @@ const UserSchema = new mongoose.Schema(
       ref: "Purchase",
     },
     // status of the player pending or compeleted means false or true.
-    statusofgame: {
-      type: Boolean,
-    },
   },
   { timestamps: true }
 );
