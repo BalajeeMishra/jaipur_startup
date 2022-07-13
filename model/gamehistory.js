@@ -28,6 +28,10 @@ const GameShema = new mongoose.Schema(
         ref: "User",
       },
     },
+    sentthedetail: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
