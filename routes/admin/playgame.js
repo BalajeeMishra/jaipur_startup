@@ -5,30 +5,13 @@ const GameHistory = require("../../model/gamehistory");
 const CategoryofBattle = require("../../model/admin/categoryofgame");
 
 router.post("/addroomcode", async (req, res) => {
-  const { roomCode, name, pricetoenter, numberofPlayers, waitingPlayer } =
-    req.body;
-  //  creating new GameHistory once the new user will try to enter the coupon code.
-  const newGameEntry = new GameHistory({
-    user: req.session.user_Id,
+  const newGameEntry = await GameHistory.findOne({
+    opponentuser: req.session.user_Id,
   });
-  newGameEntry.gamedetail.nameofbattle = name;
-  newGameEntry.gamedetail.coinonhold = pricetoenter;
-  newGameEntry.gamedetail.roomcode = roomCode;
+  newGameEntry.gamedetail.roomcode = req.body.roomCode;
   await newGameEntry.save();
-
-  // updating the categorybattle once the new user will try to enter the coupon code.
-  const updateBattle = await CategoryofBattle.findOneAndUpdate(
-    { name },
-    {
-      waitingPlayer: waitingPlayer + 1,
-      numberofPlayers: numberofPlayers + 1,
-    }
-  );
-  const waitingusers = updateBattle.waitinguser;
-  updateBattle.waitinguser = [...waitingusers, req.session.user_Id];
-  await updateBattle.save();
   return res.status(200).json({
-    message: "please wait for 45 second,we are giving you another users",
+    message: "start the game nowww",
   });
 });
 
@@ -107,10 +90,12 @@ router.post("/waitingplayer", async (req, res) => {
 router.post("/giveittoadmin", async (req, res) => {
   return res.status(200).json({ message: "giving command to admin" });
 });
-// const roomcodeDetailwithUser = await GameHistory.findOne({
 
-//   statusofgame: false,
-//   user: id,
-// }).populate("user");
-// return res.status(200).json(roomcodeDetailwithUser);
+router.get("/getroomcode", async (req, res) => {
+  const getRoomcode = await GameHistory.findOne({ user: req.session.user_Id });
+  if (getRoomcode?.gamedetail?.roomcode) {
+    return res.status(202).json({ roomCode: getRoomcode.gamedetail.roomcode });
+  }
+  return res.status(200).json({ message: "no data found" });
+});
 module.exports = router;
