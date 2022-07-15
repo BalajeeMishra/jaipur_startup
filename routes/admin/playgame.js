@@ -68,20 +68,19 @@ router.post("/waitingplayer", async (req, res) => {
     // for matching purposeee
     const findingthematch = await GameHistory.findOne({
       user: req.session.user_Id,
-    }).populate("user");
+    }).populate(["opponentuser", "user"]);
     if (findingthematch) {
       // removing from waiting user as welll as we willl decrease waiting player by  1.
       findingthematch.sentthedetail = true;
       await findingthematch.save();
-      return res.status(202).json(findingthematch);
+      return res.status(202).json({ findingthematch, user: "user" });
     }
 
     // for opponent purposeeee.
-    const mathesforother = await GameHistory.findOne({
+    const matchesforother = await GameHistory.findOne({
       opponentuser: req.session.user_Id,
-    }).populate("opponentuser");
-    console.log(mathesforother, "bala");
-    if (!findingthematch && mathesforother?.sentthedetail) {
+    }).populate(["opponentuser", "user"]);
+    if (!findingthematch && matchesforother?.sentthedetail) {
       const updateBattles = await CategoryofBattle.findOne({ name });
       // updateBattles.waitinguser = updateBattles.waitinguser.map((e) => {
       //   return e != req.session.user_Id;
@@ -96,7 +95,7 @@ router.post("/waitingplayer", async (req, res) => {
         : updateBattles.waitingPlayer;
       await updateBattles.save();
       // { opponentuser: req.session.user_Id }
-      return res.status(202).json(mathesforother);
+      return res.status(202).json({ matchesforother, user: "opponentuser" });
     }
     // const count =0;
     return res.status(200).json({ message: "in loop" });
