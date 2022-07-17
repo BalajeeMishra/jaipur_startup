@@ -102,7 +102,34 @@ router.get("/getroomcode", async (req, res) => {
 });
 
 router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
-  console.log(req.file.filename);
-  return res.status(200).json({ message: "no data found" });
+  const updatewithimage = await GameHistory.findOne({
+    user: req.session.user_Id,
+    statusofgame: false,
+  });
+  updatewithimage.gameImage.filename = req.file.filename;
+  await updatewithimage?.save();
+
+  if (!updatewithimage) {
+    const updateopponennt = await GameHistory.findOneAndUpdate({
+      opponentuser: req.session.user_Id,
+      statusofgame: false,
+    });
+    updateopponennt.gameImage.filename = req.file.filename;
+    await updateopponennt?.save();
+  }
+
+  // image processing.
+  t.recognize(`./public/images/${req.file.filename}`, "eng", {
+    logger: (m) => console.log(m),
+  }).then(({ data: { text } }) => {
+    if (
+      text.includes("Congratulations!") &&
+      text.includes("Room Code : 01750118")
+    ) {
+      return res.status(202).send("yeah got it");
+    } else {
+      return res.status(200).json({ message: "no data found" });
+    }
+  });
 });
 module.exports = router;
