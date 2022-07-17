@@ -8,8 +8,8 @@ const MongoDBStore = require("connect-mongo");
 const flash = require("connect-flash");
 const methodOverride = require("method-override");
 const cors = require("cors");
+// const fileupload = require("express-fileupload");
 const { mongoConnection } = require("./config/mongoose");
-
 const app = express();
 
 const UserRoute = require("./routes/user");
@@ -52,6 +52,7 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 app.use(flash());
+// app.use(fileupload());
 
 app.use("/api/user", UserRoute);
 app.use("/api/categoryofgame", CategoryOfGame);
@@ -68,9 +69,17 @@ app.use(async (req, res, next) => {
 
 // Home route
 app.get("/", async (req, res) => {
-  console.log(req.session.user_Id);
+  // t.recognize("./public/congratulation.jpeg", "eng", {
+  //   logger: (m) => console.log(m),
+  // }).then(({ data: { text } }) => {
+  //   console.log(
+  //     text.includes("Congratulations!"),
+  //     text.includes("Room Code : 01750118")
+  //   );
+  //   console.log(text);
+  //   res.send("bala");
+  // });
   return res.json({ message: "hello world balajee" });
-  // res.send("hello world");
 });
 
 const handleValidationErr = (err) => {

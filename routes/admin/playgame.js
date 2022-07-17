@@ -1,4 +1,6 @@
 const express = require("express");
+const t = require("tesseract.js");
+const { upload } = require("../../helper/multer");
 const router = express.Router();
 const User = require("../../model/user");
 const GameHistory = require("../../model/gamehistory");
@@ -96,6 +98,11 @@ router.get("/getroomcode", async (req, res) => {
   if (getRoomcode?.gamedetail?.roomcode) {
     return res.status(202).json({ roomCode: getRoomcode.gamedetail.roomcode });
   }
+  return res.status(200).json({ message: "no data found" });
+});
+
+router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
+  console.log(req.file.filename);
   return res.status(200).json({ message: "no data found" });
 });
 module.exports = router;
