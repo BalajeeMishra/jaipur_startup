@@ -19,9 +19,13 @@ router.post("/addroomcode", async (req, res) => {
 
 router.post("/waitingplayer", async (req, res) => {
   try {
+    // following datas regarding category of battle is coming from client side.
     const { name, pricetoenter, numberofPlayers, waitingPlayer } = req.body;
+    // we will check here in the given name of battle number of waiting user.
     const waitingPlayers = await CategoryofBattle.findOne({ name });
     const id = waitingPlayers?.waitinguser[0];
+    // with the below condition we will check if coming user is not a waiting user then we will create a
+    // gamehistory schema between them.
     if (waitingPlayers?.waitinguser.length > 0 && id != req.session.user_Id) {
       const newGameEntry = new GameHistory({
         user: req.session.user_Id,
@@ -33,9 +37,11 @@ router.post("/waitingplayer", async (req, res) => {
       newGameEntry.gamedetail.coinonhold = pricetoenter;
       await newGameEntry.save();
     } else {
-      // in case of no user is there.
+      // in case of no waiting user is there inside given cattegory.
       const updateBattles = await CategoryofBattle.findOne({ name });
       const waitingusers = updateBattles?.waitinguser;
+      // below if loop will update in case only in which someone is already waiting there
+      // then we will increase waiting count with this  user
       if (!waitingusers?.includes(req.session.user_Id)) {
         const updateBattle = await CategoryofBattle.findOneAndUpdate(
           { name },
@@ -44,15 +50,20 @@ router.post("/waitingplayer", async (req, res) => {
             numberofPlayers: numberofPlayers + 1,
           }
         );
+        // updating the list of waitingusers inside battle schema.
         if (waitingusers) {
           updateBattles.waitinguser = [...waitingusers, req.session.user_Id];
         }
-        await updateBattles.save();
+        await updateBattles?.save();
       }
     }
     // for matching purposeee
+    // newGameEntry.gamedetail.nameofbattle
     const findingthematch = await GameHistory.findOne({
       user: req.session.user_Id,
+      statusofgame: false,
+      count: 0,
+      "gamedetail.nameofbattle": name,
     }).populate(["opponentuser", "user"]);
     if (findingthematch) {
       // removing from waiting user as welll as we willl decrease waiting player by  1.
@@ -64,12 +75,16 @@ router.post("/waitingplayer", async (req, res) => {
     // for opponent purposeeee.
     const matchesforother = await GameHistory.findOne({
       opponentuser: req.session.user_Id,
+      statusofgame: false,
+      count: 0,
+      "gamedetail.nameofbattle": name,
     }).populate(["opponentuser", "user"]);
     if (!findingthematch && matchesforother?.sentthedetail) {
+      // taking here count so that one game can start once onlyy game start hone se pehle jb pehla user
+      // aayega usko detail dene se pehle count ko update kar rahe hai jisse dobara se ye phir se na aayeee.
+      matchesforother.count = 1;
+      await matchesforother.save();
       const updateBattles = await CategoryofBattle.findOne({ name });
-      // updateBattles.waitinguser = updateBattles.waitinguser.map((e) => {
-      //   return e != req.session.user_Id;
-      // });
       const index = updateBattles.waitinguser.indexOf(req.session.user_Id);
       if (index > -1) {
         // only splice array when item is found
@@ -111,7 +126,7 @@ router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
       // text.includes(`Room Code : ${roomcode}`
       if (
         text.includes("Congratulations!") &&
-        text.includes("Room Code : 01750118")
+        text.includes(`Room Code : ${roomcode}`)
       ) {
         return res.status(202).send("yeah got it");
       } else if (

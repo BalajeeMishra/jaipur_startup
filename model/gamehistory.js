@@ -35,6 +35,10 @@ const GameShema = new mongoose.Schema(
     gameImage: {
       filename: String,
     },
+    count: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
