@@ -15,6 +15,18 @@ const UserSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Purchase",
     },
+    admin: {
+      type: Boolean,
+      default: false,
+    },
+    superadmin: {
+      type: Boolean,
+      default: false,
+    },
+    adminplayer: {
+      type: Boolean,
+      default: false,
+    },
     // status of the player pending or compeleted means false or true.
   },
   { timestamps: true }

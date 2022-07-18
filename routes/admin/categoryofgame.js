@@ -26,7 +26,6 @@ router.get("/edit/:id", async (req, res) => {
 });
 router.put("/edit/:id", async (req, res) => {
   const { id } = req.params;
-  console.log(req.body);
   try {
     var updateBattle = await Category.findByIdAndUpdate(id, req.body, {
       runValidators: true,
@@ -43,7 +42,6 @@ router.put("/edit/:id", async (req, res) => {
 router.get("/delete/:id", async (req, res) => {
   const { id } = req.params;
   const deleted = await Category.findByIdAndDelete(id);
-  console.log(deleted);
   return res.status(200).json({ message: "Battle deleted " });
 });
 module.exports = router;

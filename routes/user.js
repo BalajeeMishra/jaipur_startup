@@ -44,4 +44,38 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.post("/adminplayerregister", async (req, res) => {
+  const { phoneInput } = req.body;
+  const passwordValue = phoneInput;
+  const saltPassword = await bcrypt.genSalt(12);
+  const hashedPassword = await bcrypt.hash(passwordValue, saltPassword);
+  const newUser = new User({
+    phoneNo: phoneInput,
+    password: hashedPassword,
+    adminplayer: true,
+  });
+  await newUser.save();
+  if (newUser) {
+    return res.status(200).json({
+      message: "Registered successfully",
+    });
+  }
+  if (!newUser) {
+    return res.status(201).json({
+      message: "something went wrong",
+    });
+  }
+});
+
+router.get("/alladminplayer", async (req, res) => {
+  const adminplayers = await User.find({ adminplayer: true });
+  return res.status(200).json(adminplayers);
+});
+
+router.get("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  const deleted = await User.findByIdAndDelete(id);
+  console.log(id, deleted, "balajee");
+  return res.status(200).json({ messege: "user deleted successfully" });
+});
 module.exports = router;
