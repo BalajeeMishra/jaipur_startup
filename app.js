@@ -17,6 +17,7 @@ const UserRoute = require("./routes/user");
 const CategoryOfGame = require("./routes/admin/categoryofgame");
 const Cointouser = require("./routes/admin/givecointouser");
 const PlayGame = require("./routes/admin/playgame");
+const RemoveHistory = require("./routes/admin/removehistory");
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -59,6 +60,7 @@ app.use("/api/user", UserRoute);
 app.use("/api/categoryofgame", CategoryOfGame);
 app.use("/api/cointouser", Cointouser);
 app.use("/api/playgame", PlayGame);
+app.use("/api/removehistory", RemoveHistory);
 
 app.use(async (req, res, next) => {
   res.locals.currentUser = req.user;

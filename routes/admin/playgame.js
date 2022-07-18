@@ -27,6 +27,17 @@ router.post("/waitingplayer", async (req, res) => {
     // with the below condition we will check if coming user is not a waiting user then we will create a
     // gamehistory schema between them.
     if (waitingPlayers?.waitinguser.length > 0 && id != req.session.user_Id) {
+      // if already a gamehistory is there and that was with false status and user trying to play
+      // new game then delete that one or think about it something like no delete but do archive.
+      //otherwise we will have problem because i dont know then how it will be find by themmmm... because
+      // many statusofgame: false, might create problem for image precessing.
+
+      // yaha humko payment wala bhi dekhna hoga kisis ko delete karne se pehle.
+      const previousData = await GameHistory.findOneAndDelete({
+        user: req.session.user_Id,
+        statusofgame: false,
+        "gamedetail.nameofbattle": name,
+      });
       const newGameEntry = new GameHistory({
         user: req.session.user_Id,
       });
@@ -64,7 +75,7 @@ router.post("/waitingplayer", async (req, res) => {
       statusofgame: false,
       count: 0,
       "gamedetail.nameofbattle": name,
-    }).populate(["opponentuser", "user"]);
+    });
     if (findingthematch) {
       // removing from waiting user as welll as we willl decrease waiting player by  1.
       findingthematch.sentthedetail = true;
@@ -78,7 +89,7 @@ router.post("/waitingplayer", async (req, res) => {
       statusofgame: false,
       count: 0,
       "gamedetail.nameofbattle": name,
-    }).populate(["opponentuser", "user"]);
+    });
     if (!findingthematch && matchesforother?.sentthedetail) {
       // taking here count so that one game can start once onlyy game start hone se pehle jb pehla user
       // aayega usko detail dene se pehle count ko update kar rahe hai jisse dobara se ye phir se na aayeee.
@@ -135,7 +146,9 @@ router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
       ) {
         return res
           .status(200)
-          .send("Please don't enter old images,Enter the recent one");
+          .send(
+            "Please don't enter old images or wrong one,Enter the recent one or say right"
+          );
       } else {
         return res.status(200).json({ message: "no data found" });
       }
@@ -178,7 +191,6 @@ router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
       user: req.session.user_Id,
       statusofgame: true,
     }));
-  console.log(condition, "lala");
   if (condition) {
     return res.status(200).json({ message: "This image is already proceed" });
   }
