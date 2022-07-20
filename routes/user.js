@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../model/user");
 const bcrypt = require("bcrypt");
+const { sendSms, verifyOtp } = require("../helper/sendSms");
 router.get("/register", async (req, res) => {
   // res.send("resgistering the userr");
   return res.json({ message: "hello world balajee" });
@@ -77,5 +78,12 @@ router.get("/delete/:id", async (req, res) => {
   const deleted = await User.findByIdAndDelete(id);
   console.log(id, deleted, "balajee");
   return res.status(200).json({ messege: "user deleted successfully" });
+});
+
+router.get("/messagesending", async (req, res) => {
+  sendSms(res);
+});
+router.get("/verifyotp", async (req, res) => {
+  verifyOtp(res);
 });
 module.exports = router;

@@ -24,6 +24,7 @@ router.get("/edit/:id", async (req, res) => {
   const getBattleById = await Category.findById(id);
   return res.status(200).json(getBattleById);
 });
+
 router.put("/edit/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -39,9 +40,11 @@ router.put("/edit/:id", async (req, res) => {
   console.log(updateBattle);
   return res.status(200).json({ message: "Battle gets updated" });
 });
+
 router.get("/delete/:id", async (req, res) => {
   const { id } = req.params;
   const deleted = await Category.findByIdAndDelete(id);
   return res.status(200).json({ message: "Battle deleted " });
 });
+
 module.exports = router;
