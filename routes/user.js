@@ -45,6 +45,14 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// user logout routeee..
+router.get("/logout", async (req, res) => {
+  req.session.user_Id = null;
+  console.log(req.session.user_Id, "mishra jeee");
+  return res.status(200).json("signed out");
+});
+
+// all things related to admin sectionn okayyy.
 router.post("/adminplayerregister", async (req, res) => {
   const { phoneInput } = req.body;
   const passwordValue = phoneInput;

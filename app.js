@@ -3,7 +3,6 @@ if (process.env.NODE_ENV !== "production") {
 }
 const express = require("express");
 const path = require("path");
-const t = require("tesseract.js");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongo");
 const flash = require("connect-flash");
