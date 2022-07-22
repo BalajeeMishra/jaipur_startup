@@ -1,6 +1,9 @@
 const express = require("express");
-const t = require("tesseract.js");
 const { upload } = require("../../helper/multer");
+const {
+  imageverification,
+  codeVerification,
+} = require("../../helper/image_verification");
 const router = express.Router();
 const GameHistory = require("../../model/gamehistory");
 const CategoryofBattle = require("../../model/admin/categoryofgame");
@@ -33,11 +36,19 @@ router.post("/waitingplayer", async (req, res) => {
       // many statusofgame: false, might create problem for image precessing.
 
       // yaha humko payment wala bhi dekhna hoga kisis ko delete karne se pehle.
-      const previousData = await GameHistory.findOneAndDelete({
-        user: req.session.user_Id,
-        statusofgame: false,
-        "gamedetail.nameofbattle": name,
-      });
+      // i think nameofbattle bhi query me se hatega because o dusra game bhi
+      //start kar sakta hai ek me as a waiter rehke...matlab ki faltu me gamehistory me rehke....
+      const previousData =
+        (await GameHistory.findOneAndDelete({
+          user: req.session.user_Id,
+          statusofgame: false,
+          "gamedetail.nameofbattle": name,
+        })) ||
+        (await GameHistory.findOneAndDelete({
+          opponentuser: req.session.user_Id,
+          statusofgame: false,
+          "gamedetail.nameofbattle": name,
+        }));
       const newGameEntry = new GameHistory({
         user: req.session.user_Id,
       });
@@ -54,7 +65,7 @@ router.post("/waitingplayer", async (req, res) => {
       // below if loop will update in case only in which someone is already waiting there
       // then we will increase waiting count with this  user
       if (!waitingusers?.includes(req.session.user_Id)) {
-        const updateBattle = await CategoryofBattle.findOneAndUpdate(
+        await CategoryofBattle.findOneAndUpdate(
           { name },
           {
             waitingPlayer: waitingPlayer + 1,
@@ -120,7 +131,10 @@ router.post("/giveittoadmin", async (req, res) => {
 });
 
 router.get("/getroomcode", async (req, res) => {
-  const getRoomcode = await GameHistory.findOne({ user: req.session.user_Id });
+  const getRoomcode = await GameHistory.findOne({
+    user: req.session.user_Id,
+    statusofgame: false,
+  });
   if (getRoomcode?.gamedetail?.roomcode) {
     return res.status(202).json({ roomCode: getRoomcode.gamedetail.roomcode });
   }
@@ -128,33 +142,6 @@ router.get("/getroomcode", async (req, res) => {
 });
 
 router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
-  // image processing means reading the imagess.
-  const imageverification = (roomcode) => {
-    t.recognize(`./public/images/${req.file.filename}`, "eng", {
-      logger: (m) => console.log(m),
-    }).then(({ data: { text } }) => {
-      // if both matched.
-      // text.includes(`Room Code : ${roomcode}`
-      if (
-        text.includes("Congratulations!") &&
-        text.includes(`Room Code : ${roomcode}`)
-      ) {
-        return res.status(202).send("yeah got it");
-      } else if (
-        text.includes("Congratulations!") &&
-        !text.includes(`Room Code : ${roomcode}`)
-      ) {
-        return res
-          .status(200)
-          .send(
-            "Please don't enter old images or wrong one,Enter the recent one or say right"
-          );
-      } else {
-        return res.status(200).json({ message: "no data found" });
-      }
-    });
-  };
-
   // when someone will upload image then we will first find them they will be either user or opponentuser.
   // we are checking everything for both user because in any case they both can try for it.
   const updatewithimage = await GameHistory.findOne({
@@ -165,9 +152,8 @@ router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
     updatewithimage.gameImage.filename = req.file.filename;
     await updatewithimage?.save();
     const roomcode = updatewithimage.gamedetail.roomcode;
-    imageverification(roomcode);
+    imageverification(req, res, roomcode);
   }
-
   if (!updatewithimage) {
     const updateopponennt = await GameHistory.findOne({
       opponentuser: req.session.user_Id,
@@ -177,22 +163,29 @@ router.post("/imageuploader", upload.single("gameimg"), async (req, res) => {
       updateopponennt.gameImage.filename = req.file.filename;
       await updateopponennt?.save();
       const roomcode = updateopponennt.gamedetail.roomcode;
-      imageverification(roomcode);
+      imageverification(req, res, roomcode);
     }
   }
-
-  // if status is already true then we will say to user image is already proceed
+  // we will find here with roomcode and status
+  //if data foundd then we will say to user image is already proceed
+  const code = await codeVerification(req);
   const condition =
     (await GameHistory.findOne({
       opponentuser: req.session.user_Id,
       statusofgame: true,
+      "gamedetail.roomcode": code,
     })) ||
     (await GameHistory.findOne({
       user: req.session.user_Id,
       statusofgame: true,
+      "gamedetail.roomcode": code,
     }));
   if (condition) {
-    return res.status(200).json({ message: "This image is already proceed" });
+    return res
+      .status(200)
+      .json({ message: "This image is already processedd" });
+  } else {
+    return res.status(200).json({ message: "something went wrongg" });
   }
 });
 
@@ -207,6 +200,7 @@ router.get("/afterverify", async (req, res) => {
   // status of game as well as purchase schema or say coin for that user
   if (updatewithuser) {
     updatewithuser.statusofgame = true;
+    updatewithuser.processed = true;
     await updatewithuser?.save();
     const coininthisgame = updatewithuser.gamedetail.coinonhold;
     const enterthecoin = await CoinOfUser.findOne({
@@ -226,8 +220,10 @@ router.get("/afterverify", async (req, res) => {
       opponentuser: req.session.user_Id,
       statusofgame: false,
     });
+
     if (updateopponennt) {
       updateopponennt.statusofgame = true;
+      updateopponennt.processed = true;
       await updateopponennt?.save();
       const coininthisgame = updateopponennt.gamedetail.coinonhold;
       const enterthecoin = await CoinOfUser.findOne({

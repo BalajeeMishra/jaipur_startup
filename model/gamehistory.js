@@ -14,10 +14,17 @@ const GameShema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    // status will change for any game once the image will processeddd...
     statusofgame: {
       type: Boolean,
       default: false,
     },
+    // once the image processed then only it will become true for any gamehistory.
+    processed: {
+      type: Boolean,
+      default: false,
+    },
+
     gamebetween: {
       user: {
         type: mongoose.Schema.Types.ObjectId,
