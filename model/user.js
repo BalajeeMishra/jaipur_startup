@@ -27,6 +27,12 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    roles: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role",
+      },
+    ],
     // status of the player pending or compeleted means false or true.
   },
   { timestamps: true }

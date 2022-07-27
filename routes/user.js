@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const User = require("../model/user");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { sendSms, verifyOtp } = require("../helper/sendSms");
+const JWT_ACC_ACTIVATE = process.env.JWT_ACC_ACTIVATE;
 router.get("/register", async (req, res) => {
   // res.send("resgistering the userr");
   return res.json({ message: "hello world balajee" });
@@ -15,12 +17,19 @@ router.post("/register", async (req, res) => {
   const { phoneInput, passwordValue } = req.body;
   const saltPassword = await bcrypt.genSalt(12);
   const hashedPassword = await bcrypt.hash(passwordValue, saltPassword);
-  // console.log("balajee", phoneInput, passwordValue);
   const newUser = new User({ phoneNo: phoneInput, password: hashedPassword });
   await newUser.save();
   if (newUser) {
+    const token = jwt.sign(
+      { phoneInput, passwordValue, id: newUser._id },
+      JWT_ACC_ACTIVATE,
+      {
+        expiresIn: "10 days",
+      }
+    );
     return res.status(200).json({
       message: "Registered successfully",
+      token,
     });
   }
   if (!newUser) {
@@ -37,10 +46,17 @@ router.post("/login", async (req, res) => {
   const user = await User.findOne({ phoneNo: phoneInput });
   const loginResult = await bcrypt.compare(passwordValue, user.password);
   if (loginResult) {
-    const user_log = (req.session.user_Id = user._id);
+    req.session.user_Id = user._id;
+    const token = jwt.sign(
+      { phoneInput, passwordValue, id: newUser._id },
+      JWT_ACC_ACTIVATE,
+      {
+        expiresIn: "10 days",
+      }
+    );
     return res.status(200).json({
       message: "you are Logged In",
-      user_log,
+      token,
     });
   }
 });
@@ -48,7 +64,6 @@ router.post("/login", async (req, res) => {
 // user logout routeee..
 router.get("/logout", async (req, res) => {
   req.session.user_Id = null;
-  console.log(req.session.user_Id, "mishra jeee");
   return res.status(200).json("signed out");
 });
 

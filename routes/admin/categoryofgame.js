@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const Category = require("../../model/admin/categoryofgame");
+const { verifyToken } = require("../../helper/authJwt");
 
-router.get("/", async (req, res) => {
+router.get("/", [verifyToken], async (req, res, next) => {
   const allCategory = await Category.find({});
   return res.status(200).json(allCategory);
 });
