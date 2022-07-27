@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../model/user");
+const Roles = require("../model/roleofuser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sendSms, verifyOtp } = require("../helper/sendSms");
 const JWT_ACC_ACTIVATE = process.env.JWT_ACC_ACTIVATE;
+
 router.get("/register", async (req, res) => {
   // res.send("resgistering the userr");
   return res.json({ message: "hello world balajee" });
@@ -48,7 +50,7 @@ router.post("/login", async (req, res) => {
   if (loginResult) {
     req.session.user_Id = user._id;
     const token = jwt.sign(
-      { phoneInput, passwordValue, id: newUser._id },
+      { phoneInput, passwordValue, id: user._id },
       JWT_ACC_ACTIVATE,
       {
         expiresIn: "10 days",
@@ -61,6 +63,13 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// sending roles data..
+router.get("/roles", async (_, res) => {
+  const roles = await Roles.find({});
+  console.log(roles);
+  return res.status(200).json(roles);
+});
+
 // user logout routeee..
 router.get("/logout", async (req, res) => {
   req.session.user_Id = null;
@@ -69,15 +78,17 @@ router.get("/logout", async (req, res) => {
 
 // all things related to admin sectionn okayyy.
 router.post("/adminplayerregister", async (req, res) => {
-  const { phoneInput } = req.body;
+  const { phoneInput, selectedData } = req.body;
   const passwordValue = phoneInput;
   const saltPassword = await bcrypt.genSalt(12);
   const hashedPassword = await bcrypt.hash(passwordValue, saltPassword);
+  const role = await Roles.findOne({ name: selectedData });
   const newUser = new User({
     phoneNo: phoneInput,
     password: hashedPassword,
     adminplayer: true,
   });
+  newUser.roles.push(role._id);
   await newUser.save();
   if (newUser) {
     return res.status(200).json({
